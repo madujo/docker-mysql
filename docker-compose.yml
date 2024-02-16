@@ -1,0 +1,184 @@
+version: '3'
+services:
+  mysql-master:
+    hostname: ${MYSQL_MASTER_HOST}
+    build:
+      context: master/
+      args:
+        MYSQL_VERSION: ${MYSQL_VERSION}
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role != manager]
+    ports:
+      - '3306:3306'
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_MASTER='true'
+      - MYSQL_MONITOR_USER=${MYSQL_MONITOR_USER}
+      - MYSQL_MONITOR_PASSWORD=${MYSQL_MONITOR_PASSWORD}
+    restart: unless-stopped
+    volumes:
+      - ./master/data/:/var/lib/mysql
+      - ./master/log:/var/log/mysql
+      - ./master/conf:/etc/mysql/conf.d
+    networks:
+      - mysql
+
+  mysql-slave01:
+    hostname: ${MYSQL_SLAVE01_HOST}
+    build:
+      context: slave01/
+      args:
+        MYSQL_VERSION: ${MYSQL_VERSION}
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [ node.role != manager ]
+    ports:
+      - '3307:3306'
+    environment:
+      - MYSQL_MASTER_HOST=${MYSQL_MASTER_HOST}
+      - MYSQL_SLAVE01_HOST=${MYSQL_SLAVE01_HOST}
+      - MYSQL_SLAVE02_HOST=${MYSQL_SLAVE02_HOST}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_REPL_USER1=${MYSQL_REPL_USER1}
+      - MYSQL_REPL_USER2=${MYSQL_REPL_USER2}
+      - MYSQL_REPL_USER3=${MYSQL_REPL_USER3}
+      - MYSQL_REPL_PASSWORD=${MYSQL_REPL_PASSWORD}
+      - MYSQL_MONITOR_USER=${MYSQL_MONITOR_USER}
+      - MYSQL_MONITOR_PASSWORD=${MYSQL_MONITOR_PASSWORD}
+      - MYSQL_APP_USER=${MYSQL_APP_USER}
+      - MYSQL_APP_PASSWORD=${MYSQL_APP_PASSWORD}
+      - MYSQL_MNG_USER=${MYSQL_MNG_USER}
+      - MYSQL_MNG_PASSWORD=${MYSQL_MNG_PASSWORD}
+    restart: unless-stopped
+    volumes:
+      - ./slave01/data/:/var/lib/mysql
+      - ./slave01/log:/var/log/mysql
+      - ./slave01/conf:/etc/mysql/conf.d
+    depends_on:
+      - mysql-master
+    networks:
+      - mysql
+
+  mysql-slave02:
+    hostname: ${MYSQL_SLAVE02_HOST}
+    build:
+      context: slave02/
+      args:
+        MYSQL_VERSION: ${MYSQL_VERSION}
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [ node.role != manager ]
+    ports:
+      - '3309:3306'
+    environment:
+      - MYSQL_MASTER_HOST=${MYSQL_MASTER_HOST}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_REPL_USER1=${MYSQL_REPL_USER1}
+      - MYSQL_REPL_USER2=${MYSQL_REPL_USER2}
+      - MYSQL_REPL_USER3=${MYSQL_REPL_USER3}
+      - MYSQL_REPL_PASSWORD=${MYSQL_REPL_PASSWORD}
+      - MYSQL_MONITOR_USER=${MYSQL_MONITOR_USER}
+      - MYSQL_MONITOR_PASSWORD=${MYSQL_MONITOR_PASSWORD}
+      - MYSQL_APP_USER=${MYSQL_APP_USER}
+      - MYSQL_APP_PASSWORD=${MYSQL_APP_PASSWORD}
+      - MYSQL_MNG_USER=${MYSQL_MNG_USER}
+      - MYSQL_MNG_PASSWORD=${MYSQL_MNG_PASSWORD}
+    restart: unless-stopped
+    volumes:
+      - ./slave02/data/:/var/lib/mysql
+      - ./slave02/log:/var/log/mysql
+      - ./slave02/conf:/etc/mysql/conf.d
+    depends_on:
+      - mysql-master
+    networks:
+      - mysql
+
+#  mysql-slave03:
+#    hostname: ${MYSQL_SLAVE03_HOST}
+#    build:
+#      context: slave03/
+#      args:
+#        MYSQL_VERSION: ${MYSQL_VERSION}
+#    deploy:
+#      replicas: 1
+#      placement:
+#        constraints: [ node.role != manager ]
+#    ports:
+#      - '3310:3306'
+#    environment:
+#      - MYSQL_MASTER_HOST=${MYSQL_MASTER_HOST}
+#      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+#      - MYSQL_DATABASE=${MYSQL_DATABASE}
+#      - MYSQL_USER=${MYSQL_USER}
+#      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+#      - MYSQL_REPL_USER1=${MYSQL_REPL_USER1}
+#      - MYSQL_REPL_USER2=${MYSQL_REPL_USER2}
+#      - MYSQL_REPL_USER3=${MYSQL_REPL_USER3}
+#      - MYSQL_REPL_PASSWORD=${MYSQL_REPL_PASSWORD}
+#      - MYSQL_MONITOR_USER=${MYSQL_MONITOR_USER}
+#      - MYSQL_MONITOR_PASSWORD=${MYSQL_MONITOR_PASSWORD}
+#      - MYSQL_APP_USER=${MYSQL_APP_USER}
+#      - MYSQL_APP_PASSWORD=${MYSQL_APP_PASSWORD}
+#      - MYSQL_MNG_USER=${MYSQL_MNG_USER}
+#      - MYSQL_MNG_PASSWORD=${MYSQL_MNG_PASSWORD}
+#    restart: unless-stopped
+#    volumes:
+#      - ./slave03/data/:/var/lib/mysql
+#      - ./slave03/log:/var/log/mysql
+#      - ./slave03/conf:/etc/mysql/conf.d
+#    depends_on:
+#      - mysql-master
+#
+#    networks:
+#      - mysql
+
+#  orchestrator:
+#    image: openarkcode/orchestrator:v3.2.4
+#    ports:
+#      - '3001:3000'
+#    networks:
+#      - mysql
+  proxysql:
+    hostname: proxysql
+    build:
+      context: proxysql/
+      args:
+        PROXYSQL_VERSION: ${PROXYSQL_VERSION}
+    ports:
+      - '6032:6032'
+      - '6033:6033'
+    environment:
+      - MYSQL_MASTER_HOST=${MYSQL_MASTER_HOST}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_SLAVE01_HOST=${MYSQL_SLAVE01_HOST}
+      - MYSQL_SLAVE02_HOST=${MYSQL_SLAVE02_HOST}
+      - MYSQL_APP_USER=${MYSQL_APP_USER}
+      - MYSQL_APP_PASSWORD=${MYSQL_APP_PASSWORD}
+      - MYSQL_MONITOR_USER=${MYSQL_MONITOR_USER}
+      - MYSQL_MONITOR_PASSWORD=${MYSQL_MONITOR_PASSWORD}
+    restart: unless-stopped
+    volumes:
+      - ./proxysql/data:/var/lib/proxysql
+      - ./proxysql/conf/proxysql.cnf:/etc/proxysql.cnf
+    networks:
+      - mysql
+
+networks:
+  mysql:
+    driver: bridge
+
+volumes:
+  mysql:
