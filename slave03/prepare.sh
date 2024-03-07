@@ -26,10 +26,6 @@ do
 done
 
 # (3) 마스터에 레플리케이션용 사용자 생성 및 권한 부여
-IP=`hostname -i`
-IFS='.'
-set -- $IP
-SOURCE_IP="$1.$2.%.%"
 mysql -h $MYSQL_MASTER_HOST -u root -p$MYSQL_ROOT_PASSWORD -e "CREATE USER IF NOT EXISTS '$MYSQL_REPL_USER3'@'%' IDENTIFIED WITH mysql_native_password BY '$MYSQL_REPL_PASSWORD';"
 mysql -h $MYSQL_MASTER_HOST -u root -p$MYSQL_ROOT_PASSWORD -e "GRANT REPLICATION SLAVE ON *.* TO '$MYSQL_REPL_USER3'@'%';"
 

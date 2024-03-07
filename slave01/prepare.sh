@@ -26,10 +26,6 @@ do
 done
 
 # (3) 마스터에 레플리케이션용 사용자 생성 및 권한 부여
-IP=`hostname -i`
-IFS='.'
-set -- $IP
-SOURCE_IP="$1.$2.%.%"
 mysql -h $MYSQL_MASTER_HOST -u root -p$MYSQL_ROOT_PASSWORD -e "CREATE USER IF NOT EXISTS '$MYSQL_REPL_USER1'@'%' IDENTIFIED WITH mysql_native_password BY '$MYSQL_REPL_PASSWORD';"
 mysql -h $MYSQL_MASTER_HOST -u root -p$MYSQL_ROOT_PASSWORD -e "GRANT REPLICATION SLAVE ON *.* TO '$MYSQL_REPL_USER1'@'%';"
 
@@ -86,5 +82,10 @@ mysql -h proxysql -P 6032 -u radmin -pradmin -e "INSERT INTO main.mysql_query_ru
 
 mysql -h proxysql -P 6032 -u radmin -pradmin -e "LOAD MYSQL QUERY RULES TO RUNTIME;"
 mysql -h proxysql -P 6032 -u radmin -pradmin -e "SAVE MYSQL QUERY RULES TO DISK;"
+
+# (9) mysql 서버 버전 변경
+mysql -h proxysql -P 6032 -u radmin -pradmin -e "update global_variables set variable_value='8.0.33' where variable_name='mysql-server_version';"
+mysql -h proxysql -P 6032 -u radmin -pradmin -e "load mysql variables to run;"
+mysql -h proxysql -P 6032 -u radmin -pradmin -e "save mysql variables to disk;"
 
 echo "ProxySQL Setting End"
